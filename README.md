@@ -7,5 +7,5 @@ The source for the grammar is the [reference page](https://processing.org/refere
 
 ## Tests
 
-All test codes are located in [examples directory](https://github.com/sayakaakioka/antlr-v4-grammar-processing/examples).
+All test codes are located in [examples directory](https://github.com/sayakaakioka/antlr-v4-grammar-processing/tree/main/examples).
 All of them are borrowed from [official processing-examples repository](https://github.com/processing/processing-examples).
