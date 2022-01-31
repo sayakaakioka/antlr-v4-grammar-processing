@@ -23,356 +23,292 @@ options {
 	tokenVocab = ProcessingLexer;
 }
 
-compilationUnit
-	: importDeclaration* (varDecl | funcDecl | statement | classDecl)+ EOF;
+compilationUnit:
+	importDeclaration* (
+		varDecl
+		| funcDecl
+		| statement
+		| classDecl
+	)+ EOF;
 
-importDeclaration
-	: IMPORT qualifiedName ('.' '*')? ';'
-	;
+importDeclaration: IMPORT qualifiedName ('.' '*')? ';';
 
-qualifiedName
-	: IDENTIFIER ('.' IDENTIFIER)*
-	;
+qualifiedName: IDENTIFIER ('.' IDENTIFIER)*;
 
-varDecl
-	: modifier* (classType | primitiveType) ('[' ']')* variableDeclarators ';'
-	;
+varDecl:
+	modifier* (classType | primitiveType) ('[' ']')* variableDeclarators ';';
 
-modifier
-	: PUBLIC
-    | PRIVATE
-    | FINAL
-	;
+modifier: PUBLIC | PRIVATE | FINAL;
 
-variableDeclarators
-    : variableDeclarator (',' variableDeclarator)*
-    ;
+variableDeclarators:
+	variableDeclarator (',' variableDeclarator)*;
 
-variableDeclarator
-	: variableDeclaratorId ('=' variableInitializer)?
-	;
+variableDeclarator:
+	variableDeclaratorId ('=' variableInitializer)?;
 
-variableDeclaratorId
-	: IDENTIFIER ('[' ']')*
-    ;
+variableDeclaratorId: IDENTIFIER ('[' ']')*;
 
-variableInitializer
-	: arrayInitializer
-	| expression
-	;
+variableInitializer: arrayInitializer | expression;
 
-arrayInitializer
-	: '{' (variableInitializer (',' variableInitializer)* (',')? )? '}'
-	;
+arrayInitializer:
+	'{' (variableInitializer (',' variableInitializer)* (',')?)? '}';
 
-funcDecl
-	: modifier* typeOrVoid IDENTIFIER formalParameters('[' ']')* (THROWS qualifiedNameList)? funcBody
-	;
+funcDecl:
+	modifier* typeOrVoid IDENTIFIER formalParameters ('[' ']')* (
+		THROWS qualifiedNameList
+	)? funcBody;
 
-typeOrVoid
-	: (classType | primitiveType) ('[' ']')*
-	| VOID
-	;
+typeOrVoid: (classType | primitiveType) ('[' ']')* | VOID;
 
-primitiveType
-	: BOOLEAN
+primitiveType:
+	BOOLEAN
 	| BYTE
 	| CHAR
 	| COLOR
 	| DOUBLE
 	| FLOAT
 	| INT
-	| LONG
-    | STRING
-	;
+	| LONG;
 
-classType
-	: IDENTIFIER typeArguments? ('.' IDENTIFIER typeArguments?)*
-	;
+classType:
+	IDENTIFIER typeArguments? ('.' IDENTIFIER typeArguments?)*;
 
-typeArguments
-	: '<' typeArgument (',' typeArgument)* '>'
-	;
+typeArguments: '<' typeArgument (',' typeArgument)* '>';
 
-typeArgument
-	: (classType | primitiveType) ('[' ']')*
-	;
+typeArgument: (classType | primitiveType) ('[' ']')*;
 
-formalParameters
-	: '(' (receiverParameter?
-			| receiverParameter (',' formalParameterList)?
-			| formalParameterList?
-			) ')'
-	;
+formalParameters:
+	'(' (
+		receiverParameter?
+		| receiverParameter (',' formalParameterList)?
+		| formalParameterList?
+	) ')';
 
-receiverParameter
-	: (classType | primitiveType) ('[' ']')* (IDENTIFIER '.')* THIS
-	;
+receiverParameter: (classType | primitiveType) ('[' ']')* (
+		IDENTIFIER '.'
+	)* THIS;
 
-formalParameterList
-	: formalParameter (',' formalParameter)*
-	;
+formalParameterList: formalParameter (',' formalParameter)*;
 
-formalParameter
-	: modifier* (classType | primitiveType) ('[' ']')* variableDeclaratorId
-	;
+formalParameter:
+	modifier* (classType | primitiveType) ('[' ']')* variableDeclaratorId;
 
-qualifiedNameList
-	: qualifiedName (',' qualifiedName)*
-	;
+qualifiedNameList: qualifiedName (',' qualifiedName)*;
 
-funcBody
-	: block | ';'
-	;
+funcBody: block | ';';
 
-block
-	: '{' blockStatement * '}'
-	;
+block: '{' blockStatement* '}';
 
-blockStatement
-	: varDecl
-	| statement
-	;
+blockStatement: varDecl | statement;
 
-classDecl
-	: CLASS IDENTIFIER typeParameters?
-		(EXTENDS (classType | primitiveType) ('[' ']')*)?
-		(IMPLEMENTS typeList)?
-		classBody
-	;
+classDecl:
+	classModifier* CLASS IDENTIFIER typeParameters? (
+		EXTENDS (classType | primitiveType) ('[' ']')*
+	)? (IMPLEMENTS typeList)? classBody;
 
-typeParameters
-	: '<' typeParameter (',' typeParameter)* '>'
-	;
+classModifier: modifier | ABSTRACT;
 
-typeParameter
-	: IDENTIFIER (EXTENDS typeBound)?
-	;
+typeParameters: '<' typeParameter (',' typeParameter)* '>';
 
-typeBound
-	: (classType | primitiveType) ('[' ']')* ('&' (classType | primitiveType) ('[' ']')* )*
-	;
+typeParameter: IDENTIFIER (EXTENDS typeBound)?;
 
-typeList
-	: (classType | primitiveType) ('[' ']')* (',' (classType | primitiveType) ('[' ']')* )*
-	;
+typeBound: (classType | primitiveType) ('[' ']')* (
+		'&' (classType | primitiveType) ('[' ']')*
+	)*;
 
-classBody
-	: '{' classBodyDeclaration* '}'
-	;
+typeList: (classType | primitiveType) ('[' ']')* (
+		',' (classType | primitiveType) ('[' ']')*
+	)*;
 
-classBodyDeclaration
-	: ';'
+classBody: '{' classBodyDeclaration* '}';
+
+classBodyDeclaration:
+	';'
 	| STATIC? block
 	| modifier* memberDeclaration
-	;
+	| abstractMethodDeclaration;
 
-memberDeclaration
-	: funcDecl
+abstractMethodDeclaration:
+	classModifier* modifier* typeOrVoid IDENTIFIER formalParameters (
+		'[' ']'
+	)* (THROWS qualifiedNameList)?;
+
+memberDeclaration:
+	funcDecl
 	| genericMethodDeclaration
 	| fieldDeclaration
 	| constructorDeclaration
-	| genericConstructorDeclaration
-	;
+	| genericConstructorDeclaration;
 
-genericMethodDeclaration
-	: typeParameters funcDecl
-	;
+genericMethodDeclaration: typeParameters funcDecl;
 
-fieldDeclaration
-	: varDecl
-	;
+fieldDeclaration: varDecl;
 
-constructorDeclaration
-	: IDENTIFIER formalParameters (THROWS qualifiedNameList)? constructorBody=block
-	;
+constructorDeclaration:
+	IDENTIFIER formalParameters (THROWS qualifiedNameList)? constructorBody = block;
 
-genericConstructorDeclaration
-	: typeParameters constructorDeclaration
-	;
+genericConstructorDeclaration:
+	typeParameters constructorDeclaration;
 
+statement:
+	blockLabel = block
+	| IF parExpression statement (ELSE statement)?
+	| FOR '(' forControl ')' statement
+	| WHILE parExpression statement
+	| DO statement WHILE parExpression ';'
+	| TRY block catchClause+
+	| SWITCH parExpression '{' switchBlockStatementGroup* switchLabel* '}'
+	| RETURN expression? ';'
+	| THROW expression ';'
+	| BREAK ';'
+	| CONTINUE ';'
+	| SEMI
+	| statementExpression = expression ';'
+	| identifierLabel = IDENTIFIER ':' statement;
 
-statement
-    : blockLabel=block
-    | IF parExpression statement (ELSE statement)?
-    | FOR '(' forControl ')' statement
-    | WHILE parExpression statement
-    | DO statement WHILE parExpression ';'
-    | TRY block catchClause+
-    | SWITCH parExpression '{' switchBlockStatementGroup* switchLabel* '}'
-    | RETURN expression? ';'
-    | THROW expression ';'
-    | BREAK ';'
-    | CONTINUE ';'
-    | SEMI
-    | statementExpression=expression ';'
-    | identifierLabel=IDENTIFIER ':' statement
-    ;
+parExpression: '(' expression ')';
 
-parExpression
-    : '(' expression ')'
-    ;
+forControl:
+	forInit? ';' expression? ';' forUpdate = expressionList?
+	| enhancedForControl;
 
-forControl
-    : forInit? ';' expression? ';' forUpdate=expressionList?
-	| enhancedForControl
-    ;
+forInit:
+	modifier* (classType | primitiveType) ('[' ']')* variableDeclarators
+	| expressionList;
 
-forInit
-    : modifier* (classType | primitiveType) ('[' ']')* variableDeclarators
-    | expressionList
-    ;
+expressionList: expression (',' expression)*;
 
-expressionList
-    : expression (',' expression)*
-    ;
+enhancedForControl:
+	modifier* (classType | primitiveType) ('[' ']')* variableDeclaratorId ':' expression;
 
-enhancedForControl
-    : modifier* (classType | primitiveType) ('[' ']')* variableDeclaratorId ':' expression
-    ;
+catchClause: CATCH '(' modifier* catchType IDENTIFIER ')' block;
 
-catchClause
-    : CATCH '(' modifier* catchType IDENTIFIER ')' block
-    ;
+catchType: qualifiedName ('|' qualifiedName)*;
 
-catchType
-    : qualifiedName ('|' qualifiedName)*
-    ;
+switchBlockStatementGroup: switchLabel+ blockStatement+;
 
-switchBlockStatementGroup
-    : switchLabel+ blockStatement+
-    ;
+switchLabel:
+	CASE (
+		constantExpression = expression
+		| enumConstantName = IDENTIFIER
+		| (classType | primitiveType) ('[' ']')* varName = IDENTIFIER
+	) ':'
+	| DEFAULT ':';
 
-switchLabel
-    : CASE (constantExpression=expression | enumConstantName=IDENTIFIER | (classType | primitiveType) ('[' ']')* varName=IDENTIFIER) ':'
-    | DEFAULT ':'
-    ;
+expression:
+	primary
+	| expression bop = '.' (
+		IDENTIFIER
+		| funcCall
+		| THIS
+		| NEW nonWildcardTypeArguments? innerCreator
+		| SUPER superSuffix
+		| explicitGenericInvocation
+	)
+	| expression '[' expression ']'
+	| funcCall
+	| NEW creator
+	| '(' (classType | primitiveType) ('[' ']')* (
+		'&' (classType | primitiveType) ('[' ']')*
+	)* ')' expression
+	| expression postfix = ('++' | '--')
+	| prefix = ('+' | '-' | '++' | '--') expression
+	| '!' expression
+	| expression bop = ('*' | '/' | '%') expression
+	| expression bop = ('+' | '-') expression
+	| expression ('<' '<' | '>' '>' '>' | '>' '>') expression
+	| expression bop = ('<=' | '>=' | '>' | '<') expression
+	| expression bop = INSTANCEOF (
+		(classType | primitiveType) ('[' ']')*
+	)
+	| expression bop = ('==' | '!=') expression
+	| expression bop = '&' expression
+	| expression bop = '|' expression
+	| expression bop = '&&' expression
+	| expression bop = '||' expression
+	| <assoc = right> expression bop = '?' expression ':' expression
+	| <assoc = right> expression bop = (
+		'='
+		| '+='
+		| '-='
+		| '*='
+		| '/='
+	) expression;
 
-expression
-    : primary
-    | expression bop='.'
-      (
-         IDENTIFIER
-       | methodCall
-       | THIS
-       | NEW nonWildcardTypeArguments? innerCreator
-       | SUPER superSuffix
-       | explicitGenericInvocation
-      )
-    | expression '[' expression ']'
-    | methodCall
-    | NEW creator
-    | '(' (classType | primitiveType) ('[' ']')* ('&' (classType | primitiveType) ('[' ']')* )* ')' expression
-    | expression postfix=('++' | '--')
-    | prefix=('+'|'-'|'++'|'--') expression
-    | '!' expression
-    | expression bop=('*'|'/'|'%') expression
-    | expression bop=('+'|'-') expression
-    | expression ('<' '<' | '>' '>' '>' | '>' '>') expression
-    | expression bop=('<=' | '>=' | '>' | '<') expression
-    | expression bop=INSTANCEOF ((classType | primitiveType) ('[' ']')* )
-    | expression bop=('==' | '!=') expression
-    | expression bop='&' expression
-    | expression bop='|' expression
-    | expression bop='&&' expression
-    | expression bop='||' expression
-    | <assoc=right> expression bop='?' expression ':' expression
-    | <assoc=right> expression
-      bop=('=' | '+=' | '-=' | '*=' | '/=')
-      expression
-    ;
+primary:
+	'(' expression ')'
+	| THIS
+	| SUPER
+	| literal
+	| IDENTIFIER
+	| typeOrVoid '.' CLASS
+	| nonWildcardTypeArguments (
+		explicitGenericInvocationSuffix
+		| THIS arguments
+	);
 
-primary
-    : '(' expression ')'
-    | THIS
-    | SUPER
-    | literal
-    | IDENTIFIER
-    | typeOrVoid '.' CLASS
-    | nonWildcardTypeArguments (explicitGenericInvocationSuffix | THIS arguments)
-    ;
-
-literal
-    : integerLiteral
-    | floatLiteral
-    | CHAR_LITERAL
-    | STRING_LITERAL
-    | BOOL_LITERAL
+literal:
+	integerLiteral
+	| floatLiteral
+	| CHAR_LITERAL
+	| STRING_LITERAL
+	| BOOL_LITERAL
 	| COLOR_LITERAL
-    | NULL_LITERAL
-    ;
+	| NULL_LITERAL;
 
-integerLiteral
-    : DECIMAL_LITERAL
-    ;
+integerLiteral: DECIMAL_LITERAL;
 
-floatLiteral
-    : FLOAT_LITERAL
-    ;
+floatLiteral: FLOAT_LITERAL;
 
-nonWildcardTypeArguments
-    : '<' typeList '>'
-    ;
+nonWildcardTypeArguments: '<' typeList '>';
 
-superSuffix
-    : arguments
-    | '.' typeArguments? IDENTIFIER arguments?
-    ;
+superSuffix:
+	arguments
+	| '.' typeArguments? IDENTIFIER arguments?;
 
-explicitGenericInvocationSuffix
-    : SUPER superSuffix
-    | IDENTIFIER arguments
-    ;
+explicitGenericInvocationSuffix:
+	SUPER superSuffix
+	| IDENTIFIER arguments;
 
-arguments
-    : '(' expressionList? ')'
-    ;
+arguments: '(' expressionList? ')';
 
-explicitGenericInvocation
-    : nonWildcardTypeArguments explicitGenericInvocationSuffix
-    ;
+explicitGenericInvocation:
+	nonWildcardTypeArguments explicitGenericInvocationSuffix;
 
-innerCreator
-    : IDENTIFIER nonWildcardTypeArgumentsOrDiamond? classCreatorRest
-    ;
+innerCreator:
+	IDENTIFIER nonWildcardTypeArgumentsOrDiamond? classCreatorRest;
 
+nonWildcardTypeArgumentsOrDiamond:
+	'<' '>'
+	| nonWildcardTypeArguments;
 
-nonWildcardTypeArgumentsOrDiamond
-    : '<' '>'
-    | nonWildcardTypeArguments
-    ;
+funcCall:
+	IDENTIFIER '(' expressionList? ')'
+	| THIS '(' expressionList? ')'
+	| SUPER '(' expressionList? ')'
+	| BOOLEAN '(' expressionList? ')'
+	| BYTE '(' expressionList? ')'
+	| CHAR '(' expressionList? ')'
+	| FLOAT '(' expressionList? ')'
+	| INT '(' expressionList? ')'
+	| COLOR '(' expressionList? ')';
 
-methodCall
-    : IDENTIFIER '(' expressionList? ')'
-    | THIS '(' expressionList? ')'
-    | SUPER '(' expressionList? ')'
-    | BOOLEAN '(' expressionList? ')'
-    | BYTE '(' expressionList? ')'
-    | CHAR '(' expressionList? ')'
-    | FLOAT '(' expressionList? ')'
-    | INT '(' expressionList? ')'
-    | COLOR '(' expressionList? ')'
-    ;
+creator:
+	nonWildcardTypeArguments createdName classCreatorRest
+	| createdName (arrayCreatorRest | classCreatorRest);
 
-creator
-    : nonWildcardTypeArguments createdName classCreatorRest
-    | createdName (arrayCreatorRest | classCreatorRest)
-    ;
+createdName:
+	IDENTIFIER typeArgumentsOrDiamond? (
+		'.' IDENTIFIER typeArgumentsOrDiamond?
+	)*
+	| primitiveType;
 
-createdName
-    : IDENTIFIER typeArgumentsOrDiamond? ('.' IDENTIFIER typeArgumentsOrDiamond?)*
-    | primitiveType
-    ;
+typeArgumentsOrDiamond: '<' '>' | typeArguments;
 
-typeArgumentsOrDiamond
-    : '<' '>'
-    | typeArguments
-    ;
+arrayCreatorRest:
+	'[' (
+		']' ('[' ']')* arrayInitializer
+		| expression ']' ('[' expression ']')* ('[' ']')*
+	);
 
-arrayCreatorRest
-    : '[' (']' ('[' ']')* arrayInitializer | expression ']' ('[' expression ']')* ('[' ']')*)
-    ;
-
-classCreatorRest
-    : arguments classBody?
-    ;
+classCreatorRest: arguments classBody?;

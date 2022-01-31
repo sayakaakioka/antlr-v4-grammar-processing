@@ -59,24 +59,6 @@ FLOAT: 'float';
 INT: 'int';
 LONG: 'long';
 
-// Data Composite Keywords
-ARRAY: 'Array';
-//ARRAYLIST: 'ArrayList';
-FLOATDICT: 'FloatDict';
-FLOATLIST: 'FloatList';
-HASHMAP: 'HashMap';
-INTDICT: 'IntDict';
-INTLIST: 'IntList';
-JSONARRAY: 'JsonArray';
-JSONOBJECT: 'JsonObject';
-OBJECT: 'Object';
-STRING: 'String';
-STRINGDICT: 'StringDict';
-STRINGLIST: 'StringList';
-TABLE: 'Table';
-TABLEROW: 'TableRow';
-XML: 'XML';
-
 // Control Relational Operators
 EQUAL: '==';
 GT: '>';
@@ -127,6 +109,7 @@ BITOR: '|';
 THROWS: 'throws';
 THROW: 'throw';
 INSTANCEOF: 'instanceof';
+ABSTRACT: 'abstract';
 
 // Literals
 DECIMAL_LITERAL: ('0' | [1-9] (Digits? | '_'+ Digits)) [lL]?;
@@ -152,14 +135,7 @@ fragment HexDigits: HexDigit ((HexDigit | '_')* HexDigit)?;
 fragment HexDigit: [0-9a-fA-F];
 fragment Digits: [0-9] ([0-9_]* [0-9])?;
 fragment LetterOrDigit: [a-zA-Z0-9$_];
-fragment Letter:
-	[a-zA-Z$_] // these are the "java letters" below 0x7F
-	//| ~[\u0000-\u007F\uD800-\uDBFF]
-	// covers all characters above 0x7F which are not a surrogate
-	//| [\uD800-\uDBFF] [\uDC00-\uDFFF]
-	;
-// covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
-
+fragment Letter: [a-zA-Z$_];
 
 // Whitespace
 WS: [ \t\r\n\u000C]+ -> channel(HIDDEN);
