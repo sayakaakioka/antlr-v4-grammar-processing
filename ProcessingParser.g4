@@ -31,34 +31,35 @@ compilationUnit:
 		| classDecl
 	)+ EOF;
 
-importDeclaration: IMPORT qualifiedName ('.' '*')? ';';
+importDeclaration: IMPORT qualifiedName (DOT MUL)? SEMI;
 
-qualifiedName: IDENTIFIER ('.' IDENTIFIER)*;
+qualifiedName: IDENTIFIER (DOT IDENTIFIER)*;
 
 varDecl:
-	modifier* (classType | primitiveType) ('[' ']')* variableDeclarators ';';
+	modifier* type variableDeclarators SEMI;
 
-modifier: PUBLIC | PRIVATE | FINAL;
+modifier: PUBLIC | PRIVATE | FINAL | STATIC;
 
 variableDeclarators:
-	variableDeclarator (',' variableDeclarator)*;
+	variableDeclarator (COMMA variableDeclarator)*;
 
 variableDeclarator:
-	variableDeclaratorId ('=' variableInitializer)?;
+	variableDeclaratorId (ASSIGN variableInitializer)?;
 
-variableDeclaratorId: IDENTIFIER ('[' ']')*;
+variableDeclaratorId: id = IDENTIFIER (LBRACK RBRACK)*;
 
 variableInitializer: arrayInitializer | expression;
 
 arrayInitializer:
-	'{' (variableInitializer (',' variableInitializer)* (',')?)? '}';
+	LBRACE (variableInitializer (COMMA variableInitializer)* COMMA?)? RBRACE;
 
 funcDecl:
-	modifier* typeOrVoid IDENTIFIER formalParameters ('[' ']')* (
-		THROWS qualifiedNameList
-	)? funcBody;
+	modifier* typeOrVoid funcId = IDENTIFIER formalParameters
+	(THROWS qualifiedNameList)? (block | SEMI);
 
-typeOrVoid: (classType | primitiveType) ('[' ']')* | VOID;
+typeOrVoid: type | VOID;
+
+type: (classType | primitiveType) (LBRACK RBRACK)*;
 
 primitiveType:
 	BOOLEAN
@@ -71,244 +72,193 @@ primitiveType:
 	| LONG;
 
 classType:
-	IDENTIFIER typeArguments? ('.' IDENTIFIER typeArguments?)*;
+	id=IDENTIFIER typeArguments?
+	| qualifiedName;
 
-typeArguments: '<' typeArgument (',' typeArgument)* '>';
-
-typeArgument: (classType | primitiveType) ('[' ']')*;
+typeArguments: LT type (COMMA type)* GT;
 
 formalParameters:
-	'(' (
-		receiverParameter?
-		| receiverParameter (',' formalParameterList)?
-		| formalParameterList?
-	) ')';
+    LPAREN formalParameterList? RPAREN;
 
-receiverParameter: (classType | primitiveType) ('[' ']')* (
-		IDENTIFIER '.'
-	)* THIS;
-
-formalParameterList: formalParameter (',' formalParameter)*;
+formalParameterList: formalParameter (COMMA formalParameter)*;
 
 formalParameter:
-	modifier* (classType | primitiveType) ('[' ']')* variableDeclaratorId;
+	modifier* type variableDeclaratorId;
 
-qualifiedNameList: qualifiedName (',' qualifiedName)*;
+qualifiedNameList: qualifiedName (COMMA qualifiedName)*;
 
-funcBody: block | ';';
-
-block: '{' blockStatement* '}';
+block: LBRACE blockStatement* RBRACE;
 
 blockStatement: varDecl | statement;
 
 classDecl:
-	classModifier* CLASS IDENTIFIER typeParameters? (
-		EXTENDS (classType | primitiveType) ('[' ']')*
-	)? (IMPLEMENTS typeList)? classBody;
+	classModifier* CLASS id = IDENTIFIER typeParameters?
+	(EXTENDS type)? (IMPLEMENTS typeList)? classBody;
 
 classModifier: modifier | ABSTRACT;
 
-typeParameters: '<' typeParameter (',' typeParameter)* '>';
+typeParameters: LT typeParameter (COMMA typeParameter)* GT;
 
-typeParameter: IDENTIFIER (EXTENDS typeBound)?;
+typeParameter: id = IDENTIFIER (EXTENDS typeBound)?;
 
-typeBound: (classType | primitiveType) ('[' ']')* (
-		'&' (classType | primitiveType) ('[' ']')*
-	)*;
+typeBound: type (BITAND type)*;
 
-typeList: (classType | primitiveType) ('[' ']')* (
-		',' (classType | primitiveType) ('[' ']')*
-	)*;
+typeList: type (COMMA type)*;
 
-classBody: '{' classBodyDeclaration* '}';
+classBody: LBRACE classBodyDeclaration* RBRACE;
 
 classBodyDeclaration:
-	';'
+	SEMI
 	| STATIC? block
 	| modifier* memberDeclaration
 	| abstractMethodDeclaration;
 
 abstractMethodDeclaration:
-	classModifier* modifier* typeOrVoid IDENTIFIER formalParameters (
-		'[' ']'
-	)* (THROWS qualifiedNameList)?;
+	classModifier* modifier* typeOrVoid id = IDENTIFIER formalParameters
+	(THROWS qualifiedNameList)?;
 
 memberDeclaration:
 	funcDecl
 	| genericMethodDeclaration
-	| fieldDeclaration
+	| varDecl
 	| constructorDeclaration
 	| genericConstructorDeclaration;
 
 genericMethodDeclaration: typeParameters funcDecl;
 
-fieldDeclaration: varDecl;
-
 constructorDeclaration:
-	IDENTIFIER formalParameters (THROWS qualifiedNameList)? constructorBody = block;
+	id = IDENTIFIER formalParameters (THROWS qualifiedNameList)? block;
 
 genericConstructorDeclaration:
 	typeParameters constructorDeclaration;
 
 statement:
-	blockLabel = block
-	| IF parExpression statement (ELSE statement)?
-	| FOR '(' forControl ')' statement
-	| WHILE parExpression statement
-	| DO statement WHILE parExpression ';'
+	block
+	| IF LPAREN expression RPAREN statement (ELSE statement)?
+	| FOR LPAREN forControl RPAREN statement
+	| WHILE LPAREN expression RPAREN statement
+	| DO statement WHILE LPAREN expression RPAREN SEMI
 	| TRY block catchClause+
-	| SWITCH parExpression '{' switchBlockStatementGroup* switchLabel* '}'
-	| RETURN expression? ';'
-	| THROW expression ';'
-	| BREAK ';'
-	| CONTINUE ';'
-	| SEMI
-	| statementExpression = expression ';'
-	| identifierLabel = IDENTIFIER ':' statement;
-
-parExpression: '(' expression ')';
+	| SWITCH LPAREN expression RPAREN LBRACE switchBlockStatementGroup* switchLabel* RBRACE
+	| RETURN expression? SEMI
+	| THROW expression SEMI
+	| BREAK SEMI
+	| CONTINUE SEMI
+	| expression? SEMI
+	| identifierLabel = IDENTIFIER COLON statement;
 
 forControl:
-	forInit? ';' expression? ';' forUpdate = expressionList?
+	forInit? SEMI expression? SEMI expressionList?
 	| enhancedForControl;
 
 forInit:
-	modifier* (classType | primitiveType) ('[' ']')* variableDeclarators
+	modifier* type variableDeclarators
 	| expressionList;
 
-expressionList: expression (',' expression)*;
+expressionList: expression (COMMA expression)*;
 
 enhancedForControl:
-	modifier* (classType | primitiveType) ('[' ']')* variableDeclaratorId ':' expression;
+	modifier* type variableDeclaratorId COLON expression;
 
-catchClause: CATCH '(' modifier* catchType IDENTIFIER ')' block;
+catchClause: CATCH LPAREN modifier* catchType id = IDENTIFIER RPAREN block;
 
-catchType: qualifiedName ('|' qualifiedName)*;
+catchType: qualifiedName (BITOR qualifiedName)*;
 
 switchBlockStatementGroup: switchLabel+ blockStatement+;
 
 switchLabel:
 	CASE (
-		constantExpression = expression
+		expression
 		| enumConstantName = IDENTIFIER
-		| (classType | primitiveType) ('[' ']')* varName = IDENTIFIER
-	) ':'
-	| DEFAULT ':';
+		| type varName = IDENTIFIER
+	) COLON
+	| DEFAULT COLON;
 
 expression:
 	primary
-	| expression bop = '.' (
-		IDENTIFIER
+	| LPAREN typeBound RPAREN expression
+	| expression LBRACK expression RBRACK
+	| expression bop = DOT (
+		id = IDENTIFIER
 		| funcCall
 		| THIS
-		| NEW nonWildcardTypeArguments? innerCreator
 		| SUPER superSuffix
-		| explicitGenericInvocation
+		| EQUALS LPAREN expressionList? RPAREN
+		| nonWildcardTypeArguments explicitGenericInvocationSuffix
 	)
-	| expression '[' expression ']'
 	| funcCall
 	| NEW creator
-	| '(' (classType | primitiveType) ('[' ']')* (
-		'&' (classType | primitiveType) ('[' ']')*
-	)* ')' expression
-	| expression postfix = ('++' | '--')
-	| prefix = ('+' | '-' | '++' | '--') expression
-	| '!' expression
-	| expression bop = ('*' | '/' | '%') expression
-	| expression bop = ('+' | '-') expression
-	| expression ('<' '<' | '>' '>' '>' | '>' '>') expression
-	| expression bop = ('<=' | '>=' | '>' | '<') expression
-	| expression bop = INSTANCEOF (
-		(classType | primitiveType) ('[' ']')*
-	)
-	| expression bop = ('==' | '!=') expression
-	| expression bop = '&' expression
-	| expression bop = '|' expression
-	| expression bop = '&&' expression
-	| expression bop = '||' expression
-	| <assoc = right> expression bop = '?' expression ':' expression
+	| expression postfix = (INC | DEC)
+	| prefix = (ADD | SUB | INC | DEC | BANG) expression
+	| expression bop = (MUL | DIV | MOD) expression
+	| expression bop = (ADD | SUB) expression
+	| expression bop = (L_SHIFT | R_SHIFT) expression
+    | expression bop = (
+		LE | GE | GT | LT
+	) expression
+	| expression bop = INSTANCEOF type
+	| expression bop = (EQUAL | NOTEQUAL) expression
+	| expression bop = BITAND expression
+	| expression bop = BITOR expression
+	| expression bop = AND expression
+	| expression bop = OR expression
+	| <assoc = right> expression bop = QUESTION expression COLON expression
 	| <assoc = right> expression bop = (
-		'='
-		| '+='
-		| '-='
-		| '*='
-		| '/='
-	) expression;
+		ASSIGN | ADD_ASSIGN | SUB_ASSIGN | MUL_ASSIGN | DIV_ASSIGN
+	) expression
+	;
 
 primary:
-	'(' expression ')'
+	LPAREN expression RPAREN
 	| THIS
 	| SUPER
 	| literal
-	| IDENTIFIER
-	| typeOrVoid '.' CLASS
-	| nonWildcardTypeArguments (
-		explicitGenericInvocationSuffix
-		| THIS arguments
-	);
+	| id = IDENTIFIER
+	| typeOrVoid DOT CLASS
+	| nonWildcardTypeArguments explicitGenericInvocationSuffix;
 
 literal:
-	integerLiteral
-	| floatLiteral
+	DECIMAL_LITERAL
+	| FLOAT_LITERAL
+	| HEX_LITERAL
 	| CHAR_LITERAL
 	| STRING_LITERAL
 	| BOOL_LITERAL
 	| COLOR_LITERAL
 	| NULL_LITERAL;
 
-integerLiteral: DECIMAL_LITERAL;
-
-floatLiteral: FLOAT_LITERAL;
-
-nonWildcardTypeArguments: '<' typeList '>';
+nonWildcardTypeArguments: LT typeList GT;
 
 superSuffix:
 	arguments
-	| '.' typeArguments? IDENTIFIER arguments?;
+	| DOT typeArguments? id = IDENTIFIER arguments?;
 
 explicitGenericInvocationSuffix:
 	SUPER superSuffix
-	| IDENTIFIER arguments;
+	| id = IDENTIFIER arguments;
 
-arguments: '(' expressionList? ')';
-
-explicitGenericInvocation:
-	nonWildcardTypeArguments explicitGenericInvocationSuffix;
-
-innerCreator:
-	IDENTIFIER nonWildcardTypeArgumentsOrDiamond? classCreatorRest;
-
-nonWildcardTypeArgumentsOrDiamond:
-	'<' '>'
-	| nonWildcardTypeArguments;
+arguments: LPAREN expressionList? RPAREN;
 
 funcCall:
-	IDENTIFIER '(' expressionList? ')'
-	| THIS '(' expressionList? ')'
-	| SUPER '(' expressionList? ')'
-	| BOOLEAN '(' expressionList? ')'
-	| BYTE '(' expressionList? ')'
-	| CHAR '(' expressionList? ')'
-	| FLOAT '(' expressionList? ')'
-	| INT '(' expressionList? ')'
-	| COLOR '(' expressionList? ')';
+	id = IDENTIFIER LPAREN expressionList? RPAREN
+	| (THIS | SUPER | BOOLEAN | BYTE | CHAR | FLOAT | INT | COLOR) LPAREN expressionList? RPAREN;
 
 creator:
 	nonWildcardTypeArguments createdName classCreatorRest
 	| createdName (arrayCreatorRest | classCreatorRest);
 
 createdName:
-	IDENTIFIER typeArgumentsOrDiamond? (
-		'.' IDENTIFIER typeArgumentsOrDiamond?
-	)*
+	createdNameUnit (DOT createdNameUnit)*
 	| primitiveType;
 
-typeArgumentsOrDiamond: '<' '>' | typeArguments;
+createdNameUnit: id = IDENTIFIER typeArgumentsOrDiamond?;
+
+typeArgumentsOrDiamond: LT GT | typeArguments;
 
 arrayCreatorRest:
-	'[' (
-		']' ('[' ']')* arrayInitializer
-		| expression ']' ('[' expression ']')* ('[' ']')*
+	LBRACK (
+		RBRACK (LBRACK RBRACK)* arrayInitializer
+		| expression RBRACK (LBRACK expression RBRACK)* (LBRACK RBRACK)*
 	);
 
 classCreatorRest: arguments classBody?;

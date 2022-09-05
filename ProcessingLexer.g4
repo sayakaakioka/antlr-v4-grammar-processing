@@ -59,6 +59,9 @@ FLOAT: 'float';
 INT: 'int';
 LONG: 'long';
 
+// String comparison
+EQUALS: 'equals';
+
 // Control Relational Operators
 EQUAL: '==';
 GT: '>';
@@ -104,6 +107,8 @@ SUB_ASSIGN: '-=';
 // Math Bitwise Operators
 BITAND: '&';
 BITOR: '|';
+L_SHIFT: '<<';
+R_SHIFT: '>>';
 
 // Java related keywords
 THROWS: 'throws';
@@ -113,12 +118,12 @@ ABSTRACT: 'abstract';
 
 // Literals
 DECIMAL_LITERAL: ('0' | [1-9] (Digits? | '_'+ Digits)) [lL]?;
-HEX_LITERAL: '0x' [0-9a-fA-F] ([0-9a-fA-F_]* [0-9a-fA-F])?;
+HEX_LITERAL: '0x' [0-9a-fA-F]+;
 FLOAT_LITERAL: (Digits '.' Digits? | '.' Digits) ExponentPart? [fFdD]?
 	| Digits (ExponentPart [fFdD]? | [fFdD]);
 COLOR_LITERAL: ('#' [0-9a-fA-F]*) | (HEX_LITERAL);
 BOOL_LITERAL: 'true' | 'false';
-CHAR_LITERAL: '\'' (~['\\\r\n] | EscapeSequence) '\'';
+CHAR_LITERAL: '\'' (~['\\\r\n] | EscapeSequence) '\'' | '\'' '&' [#0-9A-Za-z]+ ';' '\'';
 STRING_LITERAL: '"' (~["\\\r\n] | EscapeSequence)* '"';
 NULL_LITERAL: 'null';
 
